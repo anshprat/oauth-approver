@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "OAuth Auto-Approver",
+  "version": "1.0.0",
+  "description": "Automatically clicks through OAuth consent pages for Google, AWS SSO, and Dex auth flows",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://accounts.google.com/*",
+    "https://*.amazonaws.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://accounts.google.com/signin/oauth/*",
+        "https://accounts.google.com/signin/oauth/consent*",
+        "https://accounts.google.com/signin/oauth/v2/*",
+        "https://accounts.google.com/o/oauth2/*",
+        "https://accounts.google.com/v3/signin/*",
+        "https://accounts.google.com/AccountChooser*",
+        "https://*.amazonaws.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "include_globs": ["*/api/dex/auth*", "*/dex/auth*"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
