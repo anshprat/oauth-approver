@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OAuth Auto-Approver</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>OAuth Auto-Approver</h1>
+      <div class="status-badge" id="statusBadge">Active</div>
+    </header>
+
+    <div class="toggle-section">
+      <label class="toggle-label">
+        <span>Enable Auto-Approve</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="enableToggle" checked>
+          <span class="slider"></span>
+        </label>
+      </label>
+    </div>
+
+    <div class="delay-section">
+      <label for="delaySlider">Click Delay: <span id="delayValue">1.5</span>s</label>
+      <input type="range" id="delaySlider" min="500" max="5000" step="100" value="1500">
+    </div>
+
+    <div class="info-section">
+      <h3>Supported Sites</h3>
+      <ul>
+        <li>Google OAuth</li>
+        <li>AWS SSO (OIDC)</li>
+        <li>Dex Auth</li>
+      </ul>
+    </div>
+
+    <div class="log-section">
+      <h3>Recent Activity</h3>
+      <div id="activityLog" class="activity-log">
+        <div class="log-empty">No recent activity</div>
+      </div>
+      <button id="clearLog" class="btn-clear">Clear Log</button>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>
