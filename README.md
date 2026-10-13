@@ -20,7 +20,7 @@ A Chrome extension that clicks through OAuth consent pages for Google, AWS SSO a
 
 ## Privacy
 
-The extension stores its settings and activity log in Chrome sync storage. It sends no data to any server.
+The extension stores its settings in Chrome sync storage. It stores the activity log in local storage on this device only. Each log entry keeps the page address without the query string, so no OAuth tokens are stored. The extension sends no data to any server.
 
 ## Passkey logins
 
