@@ -5,8 +5,11 @@ chrome.runtime.onInstalled.addListener(async () => {
   // Set default values
   const settings = await chrome.storage.sync.get(['enabled', 'delay']);
   if (settings.enabled === undefined) {
-    await chrome.storage.sync.set({ enabled: true, delay: 1500, activityLog: [] });
+    await chrome.storage.sync.set({ enabled: true, delay: 1500 });
   }
+
+  // The activity log moved to local storage - drop the old copy that filled its sync quota
+  await chrome.storage.sync.remove('activityLog');
 
   // Update badge
   updateBadge(settings.enabled !== false);
@@ -36,20 +39,34 @@ function updateBadge(enabled) {
   });
 }
 
-// Log activity
+// Log activity in local storage - sync storage caps each item at 8 KB,
+// which a few long OAuth URLs fill up
 async function logActivity(data) {
-  const result = await chrome.storage.sync.get(['activityLog']);
-  const logs = result.activityLog || [];
+  try {
+    const result = await chrome.storage.local.get(['activityLog']);
+    const logs = result.activityLog || [];
 
-  // Add new entry
-  logs.push(data);
+    // Add new entry, without the query string (long, and holds OAuth tokens)
+    logs.push({ ...data, url: stripQuery(data.url) });
 
-  // Keep only last 20 entries
-  if (logs.length > 20) {
-    logs.shift();
+    // Keep only last 20 entries
+    if (logs.length > 20) {
+      logs.shift();
+    }
+
+    await chrome.storage.local.set({ activityLog: logs });
+  } catch (e) {
+    console.error('[OAuth Auto-Approver] Could not save activity log:', e);
   }
+}
 
-  await chrome.storage.sync.set({ activityLog: logs });
+function stripQuery(url) {
+  try {
+    const { origin, pathname } = new URL(url);
+    return origin + pathname;
+  } catch (e) {
+    return '';
+  }
 }
 
 // Initialize badge on startup

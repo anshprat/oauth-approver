@@ -8,7 +8,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const clearLogBtn = document.getElementById('clearLog');
 
   // Load saved settings
-  const settings = await chrome.storage.sync.get(['enabled', 'delay', 'activityLog']);
+  const settings = await chrome.storage.sync.get(['enabled', 'delay']);
+  const { activityLog: logs } = await chrome.storage.local.get(['activityLog']);
 
   // Set initial state
   enableToggle.checked = settings.enabled !== false; // Default to enabled
@@ -17,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateStatusBadge(enableToggle.checked);
 
   // Display activity log
-  displayActivityLog(settings.activityLog || []);
+  displayActivityLog(logs || []);
 
   // Toggle handler
   enableToggle.addEventListener('change', async () => {
@@ -40,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Clear log handler
   clearLogBtn.addEventListener('click', async () => {
-    await chrome.storage.sync.set({ activityLog: [] });
+    await chrome.storage.local.set({ activityLog: [] });
     displayActivityLog([]);
   });
 
