@@ -24,8 +24,7 @@ The extension stores its settings and activity log in Chrome sync storage. It se
 
 ## Passkey logins
 
-The extension never auto-approves in a tab that shows a passkey or security key login. This applies even when auto-approve is on.
+On a passkey or security key login page, the extension clicks only once. This click opens the passkey prompt. After that, the extension does not click again on that page, so it does not re-open or cancel the prompt.
 
 - The extension detects a passkey login from Google `/challenge/pk` and `/challenge/sk` URLs, or from the visible text "passkey" or "security key".
-- The tab stays excluded until you close it. So the consent page after the passkey step also needs a manual click.
-- Other tabs are not affected.
+- Pages after the passkey step, such as the consent page, are auto-approved as usual.

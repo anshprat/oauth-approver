@@ -25,35 +25,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse({ enabled: result.enabled !== false });
     });
     return true; // Keep channel open for async response
-  } else if (message.type === 'markPasskeyTab') {
-    if (!sender.tab) {
-      sendResponse({ success: false });
-      return;
-    }
-    chrome.storage.session.set({ [passkeyTabKey(sender.tab.id)]: true }).then(() => {
-      sendResponse({ success: true });
-    });
-    return true;
-  } else if (message.type === 'isPasskeyTab') {
-    if (!sender.tab) {
-      sendResponse({ excluded: false });
-      return;
-    }
-    const key = passkeyTabKey(sender.tab.id);
-    chrome.storage.session.get([key]).then(result => {
-      sendResponse({ excluded: result[key] === true });
-    });
-    return true;
   }
-});
-
-// Tabs that showed a passkey login are excluded from auto-approve until they close
-function passkeyTabKey(tabId) {
-  return `passkeyTab:${tabId}`;
-}
-
-chrome.tabs.onRemoved.addListener(tabId => {
-  chrome.storage.session.remove(passkeyTabKey(tabId));
 });
 
 // Update extension badge
