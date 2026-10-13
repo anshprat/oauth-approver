@@ -85,6 +85,38 @@
     }
   };
 
+  // Passkey (WebAuthn) login pages need the user present - never auto-click on them
+  const PASSKEY = {
+    urlPatterns: [
+      /\/challenge\/pk\b/, // Google passkey challenge
+      /\/challenge\/sk\b/  // Google security key challenge
+    ],
+    textMatches: ['passkey', 'security key']
+  };
+
+  function isPasskeyPage() {
+    const url = window.location.href;
+    if (PASSKEY.urlPatterns.some(pattern => pattern.test(url))) return true;
+    const text = ((document.body && document.body.innerText) || '').toLowerCase();
+    return PASSKEY.textMatches.some(match => text.includes(match));
+  }
+
+  // Once a tab shows a passkey login, it stays excluded until it closes,
+  // so later pages of the same flow (e.g. consent) are not auto-approved either
+  async function isPasskeyWindow() {
+    if (isPasskeyPage()) {
+      chrome.runtime.sendMessage({ type: 'markPasskeyTab' }).catch(() => {});
+      return true;
+    }
+    try {
+      const response = await chrome.runtime.sendMessage({ type: 'isPasskeyTab' });
+      return !!(response && response.excluded);
+    } catch (e) {
+      log('Could not check passkey tab state, skipping to be safe:', e);
+      return true;
+    }
+  }
+
   function detectProvider() {
     const url = window.location.href;
     if (url.includes('accounts.google.com')) return 'google';
@@ -288,6 +320,11 @@
       return;
     }
 
+    if (await isPasskeyWindow()) {
+      log('Passkey login in this tab, skipping auto-approve');
+      return;
+    }
+
     log(`Detected provider: ${provider}`);
     log(`Will attempt to auto-click with ${delay}ms delay`);
 
@@ -303,7 +340,12 @@
 
       if (button) {
         log(`Attempt ${attempts}: Found clickable button, clicking in ${delay}ms`);
-        setTimeout(() => {
+        setTimeout(async () => {
+          // The page can switch to a passkey prompt during the delay (Google SPA navigation)
+          if (await isPasskeyWindow()) {
+            log('Passkey login appeared before click, skipping');
+            return;
+          }
           simulateClick(button);
 
           // Log the action
