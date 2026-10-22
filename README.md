@@ -10,6 +10,7 @@ A Chrome extension that clicks through OAuth consent pages for Google, AWS SSO a
 - Clicks through Dex connector and grant-access pages.
 - Has an on/off toggle and a click delay setting (0.5 s to 5 s) in the popup.
 - Shows the last 5 auto-approved pages in the popup.
+- Clicks at most twice on one page: the first click, then one retry.
 
 ## Installation
 
@@ -28,3 +29,10 @@ On a passkey or security key login page, the extension clicks only once. This cl
 
 - The extension detects a passkey login from Google `/challenge/pk` and `/challenge/sk` URLs, or from the visible text "passkey" or "security key".
 - Pages after the passkey step, such as the consent page, are auto-approved as usual.
+
+## Click limit
+
+The extension clicks at most twice on one page: the first click, then one retry. A page is one URL in one tab load. The retry happens only when the page is still open after the first click. After the second click, the extension does not click again on that page until you reload it.
+
+- Passkey and security key pages keep their limit of one click.
+- A new URL, or a reload of the same URL, starts a new count.

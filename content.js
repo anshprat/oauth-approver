@@ -97,6 +97,20 @@
 
   let passkeyClicked = false;
 
+  // Click at most twice on one page: the first click, then one retry.
+  // Every MutationObserver burst starts a new run, so without this cap a page
+  // whose first click does not navigate away gets clicked on every burst.
+  const MAX_CLICKS_PER_PAGE = 2;
+  const clicksPerPage = new Map(); // page URL -> number of clicks so far
+
+  function pageKey() {
+    return window.location.href;
+  }
+
+  function clicksOnThisPage() {
+    return clicksPerPage.get(pageKey()) || 0;
+  }
+
   function isPasskeyPage() {
     const url = window.location.href;
     if (PASSKEY.urlPatterns.some(pattern => pattern.test(url))) return true;
@@ -312,6 +326,11 @@
       return;
     }
 
+    if (clicksOnThisPage() >= MAX_CLICKS_PER_PAGE) {
+      log('Already clicked and retried once on this page, not clicking again');
+      return;
+    }
+
     log(`Detected provider: ${provider}`);
     log(`Will attempt to auto-click with ${delay}ms delay`);
 
@@ -328,15 +347,30 @@
       if (button) {
         log(`Attempt ${attempts}: Found clickable button, clicking in ${delay}ms`);
         setTimeout(() => {
+          // Skip a button left over from the previous page (Google SPA navigation
+          // during the delay) - the next observer run finds the new page's own button
+          if (!button.isConnected) {
+            log('Button is no longer on the page, skipping click');
+            return;
+          }
+
+          // Re-check at click time: several runs can be waiting on this delay at once
+          const clicks = clicksOnThisPage();
+          if (clicks >= MAX_CLICKS_PER_PAGE) {
+            log(`Already clicked ${clicks} times on this page, skipping click`);
+            return;
+          }
+
           if (isPasskeyPage()) {
-            // Also skip a button left over from the previous page (Google SPA navigation
-            // during the delay) - the next observer run finds the passkey page's own button
-            if (passkeyClicked || !button.isConnected) {
+            if (passkeyClicked) {
               log('Passkey page: skipping repeat click');
               return;
             }
             passkeyClicked = true;
           }
+
+          clicksPerPage.set(pageKey(), clicks + 1);
+          log(`Click ${clicks + 1} of ${MAX_CLICKS_PER_PAGE} on this page`);
           simulateClick(button);
 
           // Log the action
