@@ -1,6 +1,6 @@
 # OAuth Auto-Approver
 
-A Chrome extension that clicks through OAuth consent pages for Google, AWS SSO and Dex sign-in flows.
+A Chrome and Firefox extension that clicks through OAuth consent pages for Google, AWS SSO and Dex sign-in flows.
 
 ## Features
 
@@ -14,14 +14,41 @@ A Chrome extension that clicks through OAuth consent pages for Google, AWS SSO a
 
 ## Installation
 
+### Chrome
+
 1. Clone this repository.
 2. Open `chrome://extensions/`.
 3. Turn on Developer mode.
 4. Click **Load unpacked** and select this folder.
 
+### Firefox
+
+Firefox 140 or later is necessary.
+
+1. Clone this repository.
+2. Run `./package.sh firefox`. This writes the Firefox build to `build/firefox/`.
+3. Open `about:debugging#/runtime/this-firefox`.
+4. Click **Load Temporary Add-on** and select `build/firefox/manifest.json`.
+
+Firefox removes a temporary add-on when it closes. To keep the add-on installed, upload the Firefox zip to [addons.mozilla.org](https://addons.mozilla.org/developers/addon/submit/) for signing. You can sign it as unlisted for your own use.
+
+## Packaging
+
+Run `./package.sh` to make both zips. The script needs `jq` and `zip`.
+
+- `./package.sh chrome` makes `oauth-auto-approver-chrome-vX.Y.Z.zip` for the Chrome Web Store.
+- `./package.sh firefox` makes `oauth-auto-approver-firefox-vX.Y.Z.zip` for addons.mozilla.org.
+
+The two browsers use the same JavaScript, HTML, CSS and icons. Only the manifest is different:
+
+- Chrome uses `manifest.json` from the repository root as is.
+- Firefox uses `manifest.json` merged with `firefox/manifest.overrides.json`. The Firefox manifest runs `background.js` as an event page, because Firefox has no background service worker. It also adds the add-on ID and the "no data collection" statement that addons.mozilla.org requires.
+
+To check the Firefox build, run `npx web-ext lint --source-dir build/firefox`.
+
 ## Privacy
 
-The extension stores its settings in Chrome sync storage. It stores the activity log in local storage on this device only. Each log entry keeps the page address without the query string, so no OAuth tokens are stored. The extension sends no data to any server.
+The extension stores its settings in the browser sync storage. It stores the activity log in local storage on this device only. Each log entry keeps the page address without the query string, so no OAuth tokens are stored. The extension sends no data to any server.
 
 ## Passkey logins
 

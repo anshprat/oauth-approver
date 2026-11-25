@@ -50,21 +50,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     statusBadge.className = 'status-badge ' + (enabled ? 'active' : 'inactive');
   }
 
+  // Build the log with DOM calls, not innerHTML (Firefox add-on review rejects innerHTML)
   function displayActivityLog(logs) {
     if (!logs || logs.length === 0) {
-      activityLog.innerHTML = '<div class="log-empty">No recent activity</div>';
+      activityLog.replaceChildren(element('div', 'log-empty', 'No recent activity'));
       return;
     }
 
     // Show most recent 5 entries
     const recentLogs = logs.slice(-5).reverse();
-    activityLog.innerHTML = recentLogs.map(log => {
+    activityLog.replaceChildren(...recentLogs.map(log => {
       const time = new Date(log.timestamp).toLocaleTimeString();
       const provider = log.provider.charAt(0).toUpperCase() + log.provider.slice(1);
-      return `<div class="log-entry">
-        <span class="log-provider">${provider}</span>
-        <span class="log-time">${time}</span>
-      </div>`;
-    }).join('');
+      const entry = element('div', 'log-entry');
+      entry.append(element('span', 'log-provider', provider), element('span', 'log-time', time));
+      return entry;
+    }));
+  }
+
+  function element(tag, className, text = '') {
+    const el = document.createElement(tag);
+    el.className = className;
+    el.textContent = text;
+    return el;
   }
 });
